@@ -7,7 +7,7 @@ A simple tool to transcribe youtube videos.
 ## Getting Started
 
 1. Clone the repo
-2. Setup your `.env` file, refer to `env.example`, edit and rename it to `.env`
+2. Setup your `.env` file, refer to `env.example`, edit the values and rename the file to `.env`
 3. Run `yarn install`
 4. Run `yarn dev`
 5. Open [http://localhost:3000](http://localhost:3000)
