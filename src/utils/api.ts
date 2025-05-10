@@ -1,7 +1,9 @@
 import axios from "axios";
 
-const api = axios.create({
+export default axios.create({
   baseURL: "https://jsonplaceholder.typicode.com",
 });
 
-export default api;
+export const translateApi = axios.create({
+  baseURL: "http://localhost:4000",
+});

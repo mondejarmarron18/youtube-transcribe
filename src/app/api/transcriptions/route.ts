@@ -1,7 +1,7 @@
 import ytdl from "@distube/ytdl-core";
 import OpenAI from "openai";
 
-const client = new OpenAI({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     const audioBuffer = await streamToBuffer(audioStream);
     const fileLike = bufferToFileLike(audioBuffer, "audio.mp4");
 
-    const transcription = await client.audio.transcriptions.create({
+    const transcription = await openai.audio.transcriptions.create({
       file: fileLike,
       model: "whisper-1",
     });
