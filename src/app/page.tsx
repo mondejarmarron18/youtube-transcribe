@@ -1,7 +1,7 @@
 "use client";
 
 import axios from "axios";
-import React, { useMemo } from "react";
+import React, { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -23,19 +23,22 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { translateApi } from "@/utils/api";
 import { Label } from "@radix-ui/react-label";
 import { Textarea } from "@/components/ui/textarea";
+// import Markdown from "react-markdown";
+// import remarkGfm from "remark-gfm";
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+import useTargetLanguages from "@/hooks/useTargetLanguages";
+import useSourceLanguages from "@/hooks/useSourceLanguages";
+import useTranslateTexts from "@/hooks/useTranslateTexts";
+import useSummarizeText from "@/hooks/useSummarizeText";
 
 const FormSchema = z.object({
   youtubeUrl: z.string().url(),
 });
 
-interface Language {
-  code: string;
-  name: string;
-  targets: string[];
-}
+const SOURCE_LANGUAGE_AUTO = "auto";
 
 const Home = () => {
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -47,27 +50,48 @@ const Home = () => {
   const [transcribed, setTranscribed] = React.useState("");
   const isLoading = form.formState.isSubmitting;
   const isValid = form.formState.isValid;
-  const [language, setLanguage] = React.useState("");
-  const [targetLanguage, setTargetLanguage] = React.useState("");
-  const [languages, setLanguages] = React.useState<Language[]>([]);
+  const [targetLanguage, setTargetLanguage] = React.useState<string>();
+  const [sourceLanguage, setSourceLanguage] =
+    React.useState<string>(SOURCE_LANGUAGE_AUTO);
+
+  const { data: targetLanguages } = useTargetLanguages();
+  const { data: sourceLanguages } = useSourceLanguages();
+  const { mutateAsync: translateTexts, isLoading: isTranslating } =
+    useTranslateTexts();
+  const { mutateAsync: summarizeTexts, isLoading: isSummarizing } =
+    useSummarizeText();
+
   const [transformedTranscript, setTransformedTranscript] = React.useState("");
-  const [status, setStatus] = React.useState("");
 
-  React.useEffect(() => {
-    if (!transcribed) return;
+  useEffect(() => {
+    handleTranslateTexts();
+  }, [sourceLanguage, targetLanguage]);
 
-    detectLanguage();
-  }, [transcribed]);
+  const handleTranslateTexts = async () => {
+    const texts = transformedTranscript || transcribed;
+    const isSourceDefault =
+      sourceLanguage === SOURCE_LANGUAGE_AUTO || !sourceLanguage;
 
-  React.useEffect(() => {
-    getTranslationLanguages();
-  }, []);
+    if (targetLanguage && texts) {
+      const result = await translateTexts({
+        source: isSourceDefault ? null : sourceLanguage,
+        target: targetLanguage,
+        texts,
+      });
 
-  React.useEffect(() => {
-    if (!language || !targetLanguage) return;
+      setTransformedTranscript(result.data.text);
+    }
+  };
 
-    handleTranslate(language, targetLanguage);
-  }, [language, targetLanguage]);
+  const handleSummarizeTexts = async () => {
+    const text = transformedTranscript || transcribed;
+
+    if (text) {
+      const result = await summarizeTexts({ text });
+
+      setTransformedTranscript(result.data);
+    }
+  };
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
     try {
@@ -77,6 +101,7 @@ const Home = () => {
 
       setTranscribed(res.data);
 
+      setTransformedTranscript("");
       form.reset();
 
       toast.success("Transcript generated successfully", {
@@ -89,93 +114,13 @@ const Home = () => {
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(transcribed);
+    navigator.clipboard.writeText(transformedTranscript || transcribed);
     toast.success("Copied to clipboard");
   };
 
   const handleReset = () => {
     setTransformedTranscript("");
-    detectLanguage();
   };
-
-  const handleSummarize = async () => {
-    setStatus("Summarizing...");
-
-    try {
-      const res = await axios.post("/api/summarizations", {
-        data: {
-          text: transformedTranscript || transcribed,
-        },
-      });
-
-      setTransformedTranscript(res.data);
-    } catch (error) {
-      console.error(error);
-
-      toast.error("Summarization failed");
-    }
-
-    setStatus("");
-  };
-
-  const handleTranslate = async (source: string, target: string) => {
-    setStatus("Translating...");
-    try {
-      const formData = new FormData();
-
-      formData.append("q", transcribed);
-      formData.append("source", source);
-      formData.append("target", target);
-
-      const translation = await translateApi.post("/translate", formData);
-
-      setTransformedTranscript(translation.data.translatedText);
-    } catch (error) {
-      console.error(error);
-
-      toast.error("Translation failed");
-    }
-
-    setStatus("");
-  };
-
-  const getTranslationLanguages = async () => {
-    try {
-      const result = await translateApi.get("/languages");
-
-      setLanguages(result.data);
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to fetch translation languages");
-    }
-  };
-
-  const detectLanguage = async () => {
-    try {
-      const formData = new FormData();
-
-      formData.append("q", transcribed);
-
-      const { data } = await translateApi.post("/detect", formData);
-
-      if (data.length > 0) {
-        return setLanguage(data[0].language);
-      }
-
-      toast.error("Language detection failed");
-    } catch (error) {
-      console.error(error);
-      toast.error("Language detection failed");
-    }
-  };
-
-  const currentLanguages = useMemo(() => {
-    return languages.filter((lang) => lang.targets.includes(language));
-  }, [language, languages]);
-
-  const currentLanguage = useMemo(() => {
-    return languages.find((lang) => lang.code === language);
-  }, [language, languages]);
 
   return (
     <div className="w-full p-4 h-full flex flex-col items-center gap-8 justify-center">
@@ -223,44 +168,36 @@ const Home = () => {
       </Form>
 
       {transcribed && (
-        <div className="max-h-[500px] w-full flex flex-col p-4 gap-4 overflow-hidden">
+        <div className="max-h-[700px] w-full flex flex-col p-4 gap-4 overflow-hidden">
           <div className="flex justify-between">
             <div className="flex gap-4 items-center">
               <Label>Translate</Label>
-              {/* <Select
-                key={language}
-                defaultValue={language}
-                onValueChange={setLanguage}
+              <Select
+                value={sourceLanguage}
+                onValueChange={setSourceLanguage}
                 disabled
               >
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Translate From" />
+                  <SelectValue placeholder="Source" />
                 </SelectTrigger>
                 <SelectContent>
-                  {languages.map((lang) => (
+                  <SelectItem value={SOURCE_LANGUAGE_AUTO}>
+                    Auto Detect
+                  </SelectItem>
+                  {sourceLanguages.map((lang) => (
                     <SelectItem key={lang.code} value={lang.code}>
                       {lang.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
-              </Select> */}
-              <Select value="auto" disabled>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Translate To" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem key="auto" value="auto">
-                    Auto ({currentLanguage?.name})
-                  </SelectItem>
-                </SelectContent>
               </Select>
               <Label>to</Label>
-              <Select onValueChange={setTargetLanguage}>
+              <Select value={targetLanguage} onValueChange={setTargetLanguage}>
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Translate To" />
+                  <SelectValue placeholder="Target" />
                 </SelectTrigger>
                 <SelectContent>
-                  {currentLanguages.map((lang) => (
+                  {targetLanguages.map((lang) => (
                     <SelectItem key={lang.code} value={lang.code}>
                       {lang.name}
                     </SelectItem>
@@ -270,13 +207,15 @@ const Home = () => {
             </div>
             <div className="flex gap-2">
               <Button
+                type="button"
                 variant="outline"
                 className="cursor-pointer"
-                onClick={handleSummarize}
+                onClick={handleSummarizeTexts}
               >
                 Summarize
               </Button>
               <Button
+                type="button"
                 variant="outline"
                 className="cursor-pointer self-end"
                 onClick={handleCopy}
@@ -284,7 +223,8 @@ const Home = () => {
                 Copy
               </Button>
               <Button
-                variant="destructive"
+                type="button"
+                variant="outline"
                 className="cursor-pointer"
                 onClick={handleReset}
                 disabled={
@@ -300,15 +240,41 @@ const Home = () => {
           <Textarea
             value={transformedTranscript || transcribed}
             onChange={(e) => setTransformedTranscript(e.target.value)}
-            className="w-full whitespace-pre-wrap"
+            className="w-full resize-none"
           />
+          {/* <Tabs
+            defaultValue="preview"
+            className="w-full h-full p-2 bg-secondary rounded-md overflow-hidden"
+          >
+            <TabsList className="w-full">
+              <TabsTrigger value="preview">Preview</TabsTrigger>
+              <TabsTrigger value="edit">Edit</TabsTrigger>
+            </TabsList>
+            <TabsContent
+              value="preview"
+              className="p-2 whitespace-pre-wrap overflow-auto"
+            >
+              <Markdown remarkPlugins={[remarkGfm]}>
+                {transformedTranscript || transcribed}
+              </Markdown>
+            </TabsContent>
+            <TabsContent value="edit" className="overflow-auto h-full p-2">
+              <Textarea
+                value={transformedTranscript || transcribed}
+                onChange={(e) => setTransformedTranscript(e.target.value)}
+                className="w-full overflow-hidden dark:text-base p-0 dark:bg-transparent focus-visible:ring-0 resize-none border-none rounded-none"
+              />
+            </TabsContent>
+          </Tabs> */}
         </div>
       )}
 
-      {!!status && (
+      {(isTranslating || isSummarizing) && (
         <div className="w-full text-xl gap-2 flex justify-center items-center flex-col h-full fixed top-0 left-0 bg-background/30 backdrop-blur-xs">
           <span className="animate-spin text-2xl">⏳</span>
-          <div className="animate-pulse text-center uppercase">{status}</div>
+          <div className="animate-pulse text-center uppercase">
+            {isTranslating ? "Translating..." : "Summarizing..."}
+          </div>
         </div>
       )}
     </div>

@@ -1,56 +1,98 @@
 import ytdl from "@distube/ytdl-core";
-import OpenAI from "openai";
+import { XMLParser } from "fast-xml-parser";
+import axios from "axios";
+import ai from "@/utils/ai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const xmlParser = new XMLParser();
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { youtubeUrl } = body.data;
 
-    // const fileStream = createWriteStream("./audio.mp4");
+    const ytInfo = await ytdl.getInfo(youtubeUrl);
+    const tracks =
+      ytInfo.player_response.captions?.playerCaptionsTracklistRenderer
+        .captionTracks;
 
-    // await new Promise((resolve, reject) => {
-    //   ytdl(youtubeUrl, { filter: "videoandaudio", quality: "highestaudio" })
-    //     .pipe(fileStream)
-    //     .on("finish", () => resolve(true))
-    //     .on("error", reject);
+    const baseURL = tracks?.find(
+      (track) => track.languageCode === "en"
+    )?.baseUrl;
+
+    if (!baseURL) {
+      throw new Error("No captions found for this video");
+    }
+
+    const response = await axios.get(baseURL);
+    const xml = xmlParser.parse(response.data);
+
+    const transcript = xml.transcript.text;
+
+    const formattedTranscript = await ai.openai.chat.completions.create({
+      model: "o4-mini",
+      messages: [
+        {
+          role: "system",
+          content:
+            "Rewrite the following transcript to reflect a natural conversational tone. Add appropriate punctuation, pauses, and emotion to make it feel like how a person would speak aloud. Add paragraph breaks and emphasis where needed to make the speech flow naturally.",
+        },
+        {
+          role: "user",
+          content: transcript.join(""),
+        },
+      ],
+    });
+
+    return new Response(formattedTranscript.choices[0].message.content);
+    // const audioStream = ytdl(youtubeUrl, {
+    //   filter: "audioandvideo",
+    //   quality: "lowestvideo",
     // });
 
-    const audioStream = ytdl(youtubeUrl, {
-      filter: "audioandvideo",
-      quality: "highestaudio",
-    });
+    // const audioBuffer = await streamToBuffer(audioStream);
+    // const fileLike = bufferToFileLike(audioBuffer, "audio.mp4");
 
-    const audioBuffer = await streamToBuffer(audioStream);
-    const fileLike = bufferToFileLike(audioBuffer, "audio.mp4");
+    // const transcription = await openai.audio.transcriptions.create({
+    //   file: fileLike,
+    //   model: "gpt-4o-mini-transcribe",
+    // });
 
-    const transcription = await openai.audio.transcriptions.create({
-      file: fileLike,
-      model: "whisper-1",
-    });
+    // const formattedTranscript = await openai.chat.completions.create({
+    //   model: "o4-mini",
+    //   messages: [
+    //     {
+    //       role: "system",
+    //       content:
+    //         "Rewrite the following transcript to reflect a natural conversational tone. Add appropriate punctuation, pauses, and emotion to make it feel like how a person would speak aloud. Add paragraph breaks and emphasis where needed to make the speech flow naturally.",
+    //     },
+    //     {
+    //       role: "user",
+    //       content: transcription.text,
+    //     },
+    //   ],
+    // });
 
-    return new Response(transcription.text);
+    // const content = formattedTranscript.choices[0].message.content;
+
+    // return new Response(content);
   } catch (error) {
     console.log(error);
     return new Response(JSON.stringify(error));
   }
 }
 
-function streamToBuffer(stream: NodeJS.ReadableStream): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = [];
-    stream.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
-    stream.on("end", () => resolve(Buffer.concat(chunks)));
-    stream.on("error", reject);
-  });
-}
+// function streamToBuffer(stream: NodeJS.ReadableStream): Promise<Buffer> {
+//   return new Promise((resolve, reject) => {
+//     const chunks: Buffer[] = [];
+//     stream.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+//     stream.on("end", () => resolve(Buffer.concat(chunks)));
+//     stream.on("error", reject);
+//   });
+// }
 
-function bufferToFileLike(buffer: Buffer, filename: string): File {
-  return new File([buffer], filename, {
-    type: "audio/mp4",
-    lastModified: Date.now(),
-  });
-}
+// function bufferToFileLike(buffer: Buffer, filename: string): File {
+//   return new File([buffer], filename, {
+//     type: "audio/mp4",
+//     lastModified: Date.now(),
+//   });
+// }
