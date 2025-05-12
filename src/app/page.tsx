@@ -47,7 +47,7 @@ const Home = () => {
       youtubeUrl: "",
     },
   });
-  const [transcribed, setTranscribed] = React.useState("");
+  const [transcribed, setTranscribed] = React.useState("a");
   const isLoading = form.formState.isSubmitting;
   const isValid = form.formState.isValid;
   const [targetLanguage, setTargetLanguage] = React.useState<string>();

@@ -2,7 +2,7 @@
 
 # Youtube Transcribe
 
-A simple tool to transcribe youtube videos, powered by [DeepSeek](https://deepseek.ai/), [OpenAI](https://openai.com/), and [LibreTranslate](https://libretranslate.de/).
+A simple tool to transcribe youtube videos, powered by [DeepSeek](https://deepseek.ai/), [OpenAI](https://openai.com/), and [DeepL](https://www.deepl.com/).
 
 ## Getting Started
 
@@ -11,8 +11,6 @@ A simple tool to transcribe youtube videos, powered by [DeepSeek](https://deepse
 3. Run `yarn install`
 4. Run `yarn dev`
 5. Open [http://localhost:3000](http://localhost:3000)
-
-`**Note**: Translation won't work, it requires a paid plan or a self-hosted server running in docker container. Refer to [LibreTranslate](https://libretranslate.de/).`
 
 ## Features
 
@@ -29,6 +27,7 @@ A simple tool to transcribe youtube videos, powered by [DeepSeek](https://deepse
 - [Zod](https://zod.dev/)
 - [OpenAI](https://openai.com/)
 - [DeepSeek](https://deepseek.ai/)
+- [DeepL](https://www.deepl.com/)
 
 ## Contributing
 
