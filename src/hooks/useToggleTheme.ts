@@ -1,7 +1,7 @@
 import React from "react";
 
 const useToggleTheme = () => {
-  const [isDarkMode, setIsDarkMode] = React.useState(false);
+  const [isDarkMode, setIsDarkMode] = React.useState(true);
 
   React.useEffect(() => {
     if (isDarkMode) {
