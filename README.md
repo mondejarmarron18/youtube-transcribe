@@ -2,7 +2,7 @@
 
 # Youtube Transcribe
 
-A simple tool to transcribe youtube videos.
+A simple tool to transcribe youtube videos, powered by [DeepSeek](https://deepseek.ai/), [OpenAI](https://openai.com/), and [DeepL](https://www.deepl.com/).
 
 ## Getting Started
 
@@ -16,8 +16,8 @@ A simple tool to transcribe youtube videos.
 
 - Transcribe youtube videos
 - Copy the transcript to clipboard
-- Summarize the transcript `(coming soon)`
-- Translate the transcript `(coming soon)`
+- Summarize the transcript
+- Translate the transcript
 
 ## Technologies Used
 
@@ -26,6 +26,8 @@ A simple tool to transcribe youtube videos.
 - [ShadUI](https://shadcn.com/)
 - [Zod](https://zod.dev/)
 - [OpenAI](https://openai.com/)
+- [DeepSeek](https://deepseek.ai/)
+- [DeepL](https://www.deepl.com/)
 
 ## Contributing
 
