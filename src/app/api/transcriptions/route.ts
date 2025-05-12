@@ -2,48 +2,72 @@ import ytdl from "@distube/ytdl-core";
 import { XMLParser } from "fast-xml-parser";
 import axios from "axios";
 import ai from "@/utils/ai";
+import { isFreeTier } from "@/utils/tierValidator";
+import apiLimiter from "@/middlwares/apiLimiter";
+import timeToMs from "@/utils/timeToMs";
 
 const xmlParser = new XMLParser();
+const ALLOWED_VIDEO_LENGTH = timeToMs.mins(10);
+
+const validateVideoLength = (
+  videoLength: number,
+  allowedVideoLength: number
+) => {
+  if (videoLength < allowedVideoLength) return;
+
+  throw new Error(
+    `We are providing limited access at the moment, so we only allow transcripting videos under ${allowedVideoLength} minutes.`
+  );
+};
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { youtubeUrl } = body.data;
-
     const ytInfo = await ytdl.getInfo(youtubeUrl);
-    const tracks =
-      ytInfo.player_response.captions?.playerCaptionsTracklistRenderer
-        .captionTracks;
 
-    const baseURL = tracks?.find(
-      (track) => track.languageCode === "en"
-    )?.baseUrl;
+    if (isFreeTier) {
+      const lengthSeconds = ytInfo.videoDetails.lengthSeconds;
+      const duration = parseInt(lengthSeconds, 10) * 1000;
 
-    if (!baseURL) {
-      throw new Error("No captions found for this video");
+      validateVideoLength(duration, ALLOWED_VIDEO_LENGTH);
     }
 
-    const response = await axios.get(baseURL);
-    const xml = xmlParser.parse(response.data);
+    return apiLimiter(request, 2, timeToMs.days(1), async () => {
+      const tracks =
+        ytInfo.player_response.captions?.playerCaptionsTracklistRenderer
+          .captionTracks;
 
-    const transcript = xml.transcript.text;
+      const baseURL = tracks?.find(
+        (track) => track.languageCode === "en"
+      )?.baseUrl;
 
-    const formattedTranscript = await ai.openai.chat.completions.create({
-      model: "o4-mini",
-      messages: [
-        {
-          role: "system",
-          content:
-            "Rewrite the following transcript to reflect a natural conversational tone. Add appropriate punctuation, pauses, and emotion to make it feel like how a person would speak aloud. Add paragraph breaks and emphasis where needed to make the speech flow naturally.",
-        },
-        {
-          role: "user",
-          content: transcript.join(""),
-        },
-      ],
+      if (!baseURL) {
+        throw new Error("No english captions found to transcribe");
+      }
+
+      const response = await axios.get(baseURL);
+      const xml = xmlParser.parse(response.data);
+
+      const transcript = xml.transcript.text;
+
+      const formattedTranscript = await ai.openai.chat.completions.create({
+        model: "o4-mini",
+        messages: [
+          {
+            role: "system",
+            content:
+              "Rewrite the following transcript to reflect a natural conversational tone. Add appropriate punctuation, pauses, and emotion to make it feel like how a person would speak aloud. Add paragraph breaks and emphasis where needed to make the speech flow naturally.",
+          },
+          {
+            role: "user",
+            content: transcript.join(""),
+          },
+        ],
+      });
+
+      return new Response(formattedTranscript.choices[0].message.content);
     });
-
-    return new Response(formattedTranscript.choices[0].message.content);
     // const audioStream = ytdl(youtubeUrl, {
     //   filter: "audioandvideo",
     //   quality: "lowestvideo",
@@ -76,7 +100,12 @@ export async function POST(request: Request) {
 
     // return new Response(content);
   } catch (error) {
-    console.log(error);
+    console.log("Error transcribing video:" + error);
+
+    if (error instanceof Error) {
+      return new Response(error.message, { status: 400 });
+    }
+
     return new Response(JSON.stringify(error));
   }
 }

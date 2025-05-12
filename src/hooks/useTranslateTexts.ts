@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { Language } from "deepl-node";
 import React from "react";
 import { toast } from "sonner";
@@ -31,12 +31,34 @@ const useTranslateTexts = () => {
   const mutateAsync = async (data: TranslateTextsDTO) => {
     setIsLoading(true);
 
-    const result = await apiRequest(data);
+    const result = await apiRequest(data)
+      .then((res) => {
+        setData(res.data);
+        setIsError(false);
+        setIsSuccess(true);
+        setError(undefined);
+
+        return res;
+      })
+      .catch((error) => {
+        setError(error);
+        setIsError(true);
+        setIsSuccess(false);
+
+        if (error instanceof AxiosError && error.response?.data) {
+          toast.error(error.response.data);
+        } else {
+          toast.error("Something went wrong");
+        }
+
+        return error;
+      });
 
     setIsLoading(false);
 
     return result;
   };
+
   const mutate = async (data: TranslateTextsDTO) => {
     try {
       setIsLoading(true);
@@ -45,6 +67,7 @@ const useTranslateTexts = () => {
       setData(result.data);
       setIsError(false);
       setIsSuccess(true);
+      setError(undefined);
     } catch (error) {
       setError(error);
       setIsError(true);

@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { isAxiosError } from "axios";
 import React from "react";
 import { toast } from "sonner";
 
@@ -24,7 +24,28 @@ const useSummarizeText = () => {
   const mutateAsync = async (data: SummarizeTextDTO) => {
     setIsLoading(true);
 
-    const result = await apiRequest(data);
+    const result = await apiRequest(data)
+      .then((res) => {
+        setData(res.data);
+        setIsError(false);
+        setIsSuccess(true);
+        setError(undefined);
+
+        return res;
+      })
+      .catch((error) => {
+        setError(error);
+        setIsError(true);
+        setIsSuccess(false);
+
+        if (isAxiosError(error) && error.response?.data) {
+          toast.error(error.response.data);
+        } else {
+          toast.error("Something went wrong");
+        }
+
+        return error;
+      });
 
     setIsLoading(false);
 
