@@ -56,7 +56,7 @@ const features = [
   {
     icon: <Layers2 />,
     title: "Summarization",
-    description: "5000 characters of transcript",
+    description: "5000 characters of summarization",
   },
 ];
 
