@@ -67,7 +67,7 @@ const Home = () => {
       youtubeUrl: "",
     },
   });
-  const [transcribed, setTranscribed] = React.useState("a");
+  const [transcribed, setTranscribed] = React.useState("");
   const isLoading = form.formState.isSubmitting;
   const isValid = form.formState.isValid;
   const [targetLanguage, setTargetLanguage] = React.useState<string>();
@@ -174,7 +174,9 @@ const Home = () => {
 
   return (
     <div className="w-full p-4 h-full flex flex-col items-center gap-8 justify-center">
-      <Button onClick={toggleTheme}>{isDarkMode ? <Moon /> : <Sun />}</Button>
+      <Button onClick={toggleTheme} className="cursor-pointer">
+        {isDarkMode ? <Moon /> : <Sun />}
+      </Button>
       <div className="w-full flex justify-center text-center flex-col items-center">
         <h1 className="text-3xl font-bold">
           <span className="text-primary">YT</span> Transcribe
