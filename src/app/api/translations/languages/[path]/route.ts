@@ -1,11 +1,13 @@
 import translator from "@/utils/translator";
 
-interface GetParams {
-  path: string;
+interface Context {
+  params: Promise<{
+    path: string;
+  }>;
 }
 
-export async function GET(request: Request, { params }: { params: GetParams }) {
-  const { path } = params;
+export async function GET(request: Request, context: Context) {
+  const { path } = await context.params;
 
   let result;
 
