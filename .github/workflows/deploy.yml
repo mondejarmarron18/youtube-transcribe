@@ -17,6 +17,8 @@ jobs:
       TIER: ${{ secrets.TIER }}
     steps:
       - uses: actions/checkout@v4
+      - name: Debug environment variables
+        run: printenv
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ vars.NODE_VERSION }}
