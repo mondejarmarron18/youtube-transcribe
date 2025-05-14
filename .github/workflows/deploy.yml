@@ -7,9 +7,6 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    environment: production
-  build_deploy:
     runs-on: self-hosted
     environment: production
     env:
