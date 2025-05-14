@@ -9,27 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     environment: production
-    env:
-      DEEPSEEK_API_URL: ${{ secrets.DEEPSEEK_API_URL }}
-      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      DEEPL_API_KEY: ${{ secrets.DEEPL_API_KEY }}
-      TIER: ${{ secrets.TIER }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ vars.NODE_VERSION }}
-      - run: npm install -g yarn
-      - run: yarn install
-      - run: yarn build
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: next-build
-          path: .next
-  deploy:
-    needs: build
+  build_deploy:
     runs-on: self-hosted
     environment: production
     env:
@@ -44,10 +24,6 @@ jobs:
         with:
           node-version: ${{ vars.NODE_VERSION }}
       - run: npm install -g yarn
-      - run: yarn install --production
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: next-build
-          path: .next
+      - run: yarn install
+      - run: yarn build
       - run: yarn start
