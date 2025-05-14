@@ -7,9 +7,6 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    environment: production
-  build_deploy:
     runs-on: self-hosted
     environment: production
     env:
@@ -23,7 +20,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ vars.NODE_VERSION }}
-      - run: npm install -g yarn
-      - run: yarn install
+      - run: yarn install --production
       - run: yarn build
       - run: yarn start
