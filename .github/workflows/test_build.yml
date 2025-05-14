@@ -9,6 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: production
     env:
       DEEPSEEK_API_URL: ${{ secrets.DEEPSEEK_API_URL }}
       DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
@@ -22,3 +23,4 @@ jobs:
           node-version: ${{ vars.NODE_VERSION }}
       - run: yarn install
       - run: yarn build
+      - run: yarn start
