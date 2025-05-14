@@ -17,11 +17,9 @@ jobs:
       TIER: ${{ secrets.TIER }}
     steps:
       - uses: actions/checkout@v4
-      - name: Debug environment variables
-        run: printenv
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ vars.NODE_VERSION }}
-      - run: yarn install
+      - run: yarn install --production
       - run: yarn build
       - run: yarn start
