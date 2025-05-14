@@ -87,6 +87,7 @@ const Home = () => {
 
   useEffect(() => {
     handleTranslateTexts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sourceLanguage, targetLanguage]);
 
   const handleTranslateTexts = async () => {

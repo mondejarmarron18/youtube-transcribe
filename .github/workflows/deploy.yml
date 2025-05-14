@@ -1,22 +1,25 @@
 name: deploy
 
 on:
-  workflow_run:
-    workflows:
-      - test
-    types:
-      - completed
+  push:
     branches:
       - main
 
 jobs:
   build:
-    if: ${{github.event.workflow_run.event == 'push' && github.event.workflow_run.conclusion == 'success'}}
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    environment: production
+    env:
+      DEEPSEEK_API_URL: ${{ secrets.DEEPSEEK_API_URL }}
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      DEEPL_API_KEY: ${{ secrets.DEEPL_API_KEY }}
+      TIER: ${{ secrets.TIER }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
-      - run: yarn install --production
+          node-version: ${{ vars.NODE_VERSION }}
+      - run: yarn install
       - run: yarn build
+      - run: yarn start
