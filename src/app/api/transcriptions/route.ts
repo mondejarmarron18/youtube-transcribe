@@ -26,10 +26,12 @@ export async function POST(request: Request) {
       throw new Error("Failed to connect to youtube");
     }
 
+    console.log("youtubeId", youtubeId);
     const ytVidsInfo = await getYoutubeVideosInfo([youtubeId], GOOGLE_API_KEY);
     const duration = ytVidsInfo?.[0].contentDetails?.duration;
     const durationInMs = duration ? isoDurationToMs(duration) : null;
 
+    console.log("duration", duration);
     if (!durationInMs) {
       throw new Error("Failed to connect to youtube");
     }
@@ -40,6 +42,7 @@ export async function POST(request: Request) {
 
     const { link }: YoutubeToMp3Return = await new Promise(
       async (resolve, reject) => {
+        console.log("youtubeToMp3");
         let youtubeAudio = await youtubeToMp3(youtubeId);
 
         const poll = async () => {
@@ -115,19 +118,3 @@ const validateVideoLength = (
     `We are providing limited access at the moment, so we only allow transcripting videos under ${timeInMins} minutes.`
   );
 };
-
-// function streamToBuffer(stream: NodeJS.ReadableStream): Promise<Buffer> {
-//   return new Promise((resolve, reject) => {
-//     const chunks: Buffer[] = [];
-//     stream.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
-//     stream.on("end", () => resolve(Buffer.concat(chunks)));
-//     stream.on("error", reject);
-//   });
-// }
-
-// function bufferToFileLike(buffer: Buffer, filename: string): File {
-//   return new File([buffer], filename, {
-//     type: "audio/mp4",
-//     lastModified: Date.now(),
-//   });
-// }
