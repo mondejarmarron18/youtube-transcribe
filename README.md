@@ -2,7 +2,7 @@
 
 # Youtube Transcribe
 
-A simple tool to transcribe youtube videos, powered by [DeepSeek](https://deepseek.ai/), [OpenAI](https://openai.com/), and [DeepL](https://www.deepl.com/).
+A simple tool to transcribe youtube videos, powered by [DeepSeek](https://deepseek.ai/), [OpenAI](https://openai.com/), [DeepL](https://www.deepl.com/), and [Google Youtube API](https://developers.google.com/youtube/v3/getting-started).
 
 ## Getting Started
 
@@ -28,6 +28,7 @@ A simple tool to transcribe youtube videos, powered by [DeepSeek](https://deepse
 - [OpenAI](https://openai.com/)
 - [DeepSeek](https://deepseek.ai/)
 - [DeepL](https://www.deepl.com/)
+- [Google Youtube API](https://developers.google.com/youtube/v3/getting-started)
 
 ## Contributing
 
