@@ -1,4 +1,4 @@
-const timeToMs = {
+export const timeToMs = {
   hours: (hours: number) => hours * 60 * 60 * 1000,
   mins: (mins: number) => mins * 60 * 1000,
   secs: (secs: number) => secs * 1000,
@@ -22,4 +22,15 @@ export const msToTime = (time: number): string => {
   return `${pad(days)}:${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 };
 
-export default timeToMs;
+export const isoDurationToMs = (iso: string) => {
+  const match = /^PT(?:(\d+)M)?(?:(\d+)S)?$/.exec(iso);
+
+  if (!match || (!match[1] && !match[2])) {
+    throw new Error(`Invalid ISO duration: ${iso}`);
+  }
+
+  const minutes = parseInt(match[1] || "0", 10);
+  const seconds = parseInt(match[2] || "0", 10);
+
+  return (minutes * 60 + seconds) * 1000;
+};

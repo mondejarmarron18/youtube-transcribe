@@ -1,6 +1,6 @@
 import apiLimiter from "@/middlwares/apiLimiter";
 import ai from "@/utils/ai";
-import timeToMs from "@/utils/timeToMs";
+import { timeToMs } from "@/utils/time";
 
 const ALLOWED_CHARACTERS_LENGTH = 5000;
 
@@ -15,7 +15,7 @@ const validateCharactersLength = (
   if (textsLength <= allowedCharactersLength) return;
 
   throw new Error(
-    `We are providing limited access at the moment, so we only allow ${allowedCharactersLength} characters to to summarize.`
+    `We are providing limited access at the moment, so we only allow ${allowedCharactersLength} characters to summarize.`
   );
 };
 
