@@ -1,7 +1,7 @@
 "use client";
 
 import axios, { AxiosError } from "axios";
-import React, { Fragment, useEffect } from "react";
+import React, { Fragment, useEffect, useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -25,40 +25,43 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Label } from "@radix-ui/react-label";
 import { Textarea } from "@/components/ui/textarea";
-// import Markdown from "react-markdown";
-// import remarkGfm from "remark-gfm";
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
 import useTargetLanguages from "@/hooks/useTargetLanguages";
 import useSourceLanguages from "@/hooks/useSourceLanguages";
 import useTranslateTexts from "@/hooks/useTranslateTexts";
 import useSummarizeText from "@/hooks/useSummarizeText";
 import { Languages, Layers2, Link, Moon, Sun } from "lucide-react";
 import useToggleTheme from "@/hooks/useToggleTheme";
+import { cn } from "@/lib/utils";
 
 const FormSchema = z.object({
   youtubeUrl: z.string().url(),
 });
 
 const SOURCE_LANGUAGE_AUTO = "auto";
+const CHARS_LIMIT = 5_000;
+const VIDS_LIMIT = 10;
 
 const features = [
   {
     icon: <Link />,
     title: "Transcription",
-    description: "10 mins of transcript",
+    description: `Up to ${VIDS_LIMIT} mininutes of youtube transcription per request`,
   },
   {
     icon: <Languages />,
     title: "Translation",
-    description: "5000 characters of transcript",
+    description: `34 languages, Up to ${CHARS_LIMIT.toLocaleString(
+      "en-US"
+    )} characters per translation`,
   },
   {
     icon: <Layers2 />,
     title: "Summarization",
-    description: "5000 characters of summarization",
+    description: `Up to ${CHARS_LIMIT.toLocaleString(
+      "en-US"
+    )} characters per summarization`,
   },
-];
+] as const;
 
 const Home = () => {
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -129,7 +132,6 @@ const Home = () => {
       });
 
       setTranscribed(res.data);
-
       setTransformedTranscript("");
       form.reset();
 
@@ -156,22 +158,28 @@ const Home = () => {
     setTransformedTranscript("");
   };
 
-  const renderFeatureCard = (
-    icon: React.ReactNode,
-    title: string,
-    description: string
-  ) => {
+  const renderFeatureCard = ({
+    icon,
+    title,
+    description,
+  }: (typeof features)[number]) => {
     return (
-      <div className="flex flex-col md:flex-row max-w-xs w-full md:max-w-none flex-1 items-center gap-2 md:gap-4 rounded-md p-2 md:p-4 bg-foreground/5">
+      <div className="flex h-full flex-col md:flex-row max-w-xs w-full md:max-w-none flex-1 items-center gap-2 md:gap-4 rounded-md p-2 md:p-4 bg-foreground/5">
         <div className="bg-foreground/10 rounded-md p-2">{icon}</div>
         <div className=" text-center md:text-left">
-          <div className="text-xs font-medium">{title}</div>
-          <p className="text-xs text-muted-foreground">{description}</p>
-          <p className="text-xs text-muted-foreground">2 credits per day</p>
+          <p className="text-xs font-medium">{title}</p>
+          <p className="text-xs text-muted-foreground whitespace-pre-wrap">
+            {description}
+          </p>
         </div>
       </div>
     );
   };
+
+  const isCharsLimitExceeded = useMemo(
+    () => (transformedTranscript || transcribed).length + 5000 > CHARS_LIMIT,
+    [transformedTranscript, transcribed]
+  );
 
   return (
     <div className="w-full p-4 h-full flex flex-col items-center gap-8 justify-center">
@@ -189,13 +197,7 @@ const Home = () => {
 
       <div className="flex gap-4 items-center w-full max-w-4xl flex-col md:flex-row">
         {features.map((feature, index) => (
-          <Fragment key={index}>
-            {renderFeatureCard(
-              feature.icon,
-              feature.title,
-              feature.description
-            )}
-          </Fragment>
+          <Fragment key={index}>{renderFeatureCard(feature)}</Fragment>
         ))}
       </div>
 
@@ -263,6 +265,7 @@ const Home = () => {
                 <Select
                   value={targetLanguage}
                   onValueChange={setTargetLanguage}
+                  disabled={isCharsLimitExceeded}
                 >
                   <SelectTrigger className="w-fit">
                     <SelectValue placeholder="Target" />
@@ -283,6 +286,7 @@ const Home = () => {
                 variant="outline"
                 className="cursor-pointer"
                 onClick={handleSummarizeTexts}
+                disabled={isCharsLimitExceeded}
               >
                 Summarize
               </Button>
@@ -309,35 +313,21 @@ const Home = () => {
             </div>
           </div>
 
-          <Textarea
-            value={transformedTranscript || transcribed}
-            onChange={(e) => setTransformedTranscript(e.target.value)}
-            className="w-full text-sm resize-none"
-          />
-          {/* <Tabs
-            defaultValue="preview"
-            className="w-full h-full p-2 bg-secondary rounded-md overflow-hidden"
-          >
-            <TabsList className="w-full">
-              <TabsTrigger value="preview">Preview</TabsTrigger>
-              <TabsTrigger value="edit">Edit</TabsTrigger>
-            </TabsList>
-            <TabsContent
-              value="preview"
-              className="p-2 whitespace-pre-wrap overflow-auto"
+          <div className="flex flex-col gap-2 max-h-[500px] overflow-auto">
+            <Textarea
+              value={transformedTranscript || transcribed}
+              onChange={(e) => setTransformedTranscript(e.target.value)}
+              className="w-full text-sm resize-none"
+            />
+            <div
+              className={cn("text-xs text-muted-foreground", {
+                "text-destructive": isCharsLimitExceeded,
+              })}
             >
-              <Markdown remarkPlugins={[remarkGfm]}>
-                {transformedTranscript || transcribed}
-              </Markdown>
-            </TabsContent>
-            <TabsContent value="edit" className="overflow-auto h-full p-2">
-              <Textarea
-                value={transformedTranscript || transcribed}
-                onChange={(e) => setTransformedTranscript(e.target.value)}
-                className="w-full overflow-hidden dark:text-base p-0 dark:bg-transparent focus-visible:ring-0 resize-none border-none rounded-none"
-              />
-            </TabsContent>
-          </Tabs> */}
+              {(transformedTranscript || transcribed).length + 4000} / 5000{" "}
+              Characters
+            </div>
+          </div>
         </div>
       )}
 

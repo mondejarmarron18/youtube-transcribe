@@ -1,4 +1,4 @@
-import timeToMs, { msToTime } from "@/utils/timeToMs";
+import { timeToMs, msToTime } from "@/utils/time";
 
 type Requests = Record<
   string,

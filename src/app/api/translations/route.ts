@@ -1,5 +1,5 @@
 import apiLimiter from "@/middlwares/apiLimiter";
-import timeToMs from "@/utils/timeToMs";
+import { timeToMs } from "@/utils/time";
 import translator from "@/utils/translator";
 
 const ALLOWED_CHARACTERS_LENGTH = 5000;
