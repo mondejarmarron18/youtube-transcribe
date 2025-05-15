@@ -177,7 +177,7 @@ const Home = () => {
   };
 
   const isCharsLimitExceeded = useMemo(
-    () => (transformedTranscript || transcribed).length + 5000 > CHARS_LIMIT,
+    () => (transformedTranscript || transcribed).length > CHARS_LIMIT,
     [transformedTranscript, transcribed]
   );
 
