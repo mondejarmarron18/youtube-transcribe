@@ -13,8 +13,6 @@ const ytMp3 = {
 };
 
 const youtubeToMp3 = async (youtubeId: string): Promise<YoutubeToMp3Return> => {
-  console.log(ytMp3);
-
   if (!ytMp3.url || !ytMp3.key || !ytMp3.host) {
     throw new Error("Youtube to MP3 API is not configured correctly");
   }

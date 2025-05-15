@@ -4,7 +4,7 @@ import apiLimiter from "@/middlwares/apiLimiter";
 import { isoDurationToMs, timeToMs } from "@/utils/time";
 import { getYoutubeVideosInfo } from "@/utils/youtube";
 import youtubeToMp3, { YoutubeToMp3Return } from "@/utils/youtubeToMp3";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { toFile } from "openai";
 
 const ALLOWED_VIDEO_LENGTH = timeToMs.mins(10);
@@ -60,21 +60,15 @@ export async function POST(request: Request) {
       }
     );
 
-    console.log(link);
-
     const audio = await axios.get(link, {
       responseType: "stream",
     });
-
-    console.log("stream");
 
     if (!audio.data) {
       throw new Error("Failed to get youtube audio");
     }
 
     const file = await toFile(audio.data, "audio.mp3");
-
-    console.log(file);
 
     return apiLimiter(request, 2, timeToMs.days(1), async () => {
       const transcript = await ai.openai.audio.transcriptions.create({
@@ -105,6 +99,10 @@ export async function POST(request: Request) {
 
     if (error instanceof Error) {
       return new Response(error.message, { status: 400 });
+    }
+
+    if (error instanceof AxiosError) {
+      return new Response("Something went wrong", { status: 400 });
     }
 
     return new Response(JSON.stringify(error));
