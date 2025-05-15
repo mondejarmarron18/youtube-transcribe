@@ -26,12 +26,10 @@ export async function POST(request: Request) {
       throw new Error("Failed to connect to youtube");
     }
 
-    console.log("youtubeId", youtubeId);
     const ytVidsInfo = await getYoutubeVideosInfo([youtubeId], GOOGLE_API_KEY);
     const duration = ytVidsInfo?.[0].contentDetails?.duration;
     const durationInMs = duration ? isoDurationToMs(duration) : null;
 
-    console.log("duration", duration);
     if (!durationInMs) {
       throw new Error("Failed to connect to youtube");
     }
@@ -42,9 +40,9 @@ export async function POST(request: Request) {
 
     const { link }: YoutubeToMp3Return = await new Promise(
       async (resolve, reject) => {
-        console.log("youtubeToMp3");
         let youtubeAudio = await youtubeToMp3(youtubeId);
 
+        console.log(youtubeAudio);
         const poll = async () => {
           if (youtubeAudio.status === "fail") {
             return reject(youtubeAudio);
@@ -62,9 +60,13 @@ export async function POST(request: Request) {
       }
     );
 
+    console.log(link);
+
     const audio = await axios.get(link, {
       responseType: "stream",
     });
+
+    console.log("stream");
 
     if (!audio.data) {
       throw new Error("Failed to get youtube audio");
@@ -72,12 +74,15 @@ export async function POST(request: Request) {
 
     const file = await toFile(audio.data, "audio.mp3");
 
+    console.log(file);
+
     return apiLimiter(request, 2, timeToMs.days(1), async () => {
       const transcript = await ai.openai.audio.transcriptions.create({
         model: "gpt-4o-mini-transcribe",
         file,
       });
 
+      console.log(transcript);
       const formattedTranscript = await ai.openai.chat.completions.create({
         model: "o4-mini",
         messages: [
