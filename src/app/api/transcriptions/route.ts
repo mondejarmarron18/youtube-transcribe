@@ -42,7 +42,6 @@ export async function POST(request: Request) {
       async (resolve, reject) => {
         let youtubeAudio = await youtubeToMp3(youtubeId);
 
-        console.log(youtubeAudio);
         const poll = async () => {
           if (youtubeAudio.status === "fail") {
             return reject(youtubeAudio);
@@ -76,7 +75,6 @@ export async function POST(request: Request) {
         file,
       });
 
-      console.log(transcript);
       const formattedTranscript = await ai.openai.chat.completions.create({
         model: "o4-mini",
         messages: [
