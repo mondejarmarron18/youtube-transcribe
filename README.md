@@ -1,8 +1,8 @@
-![Youtube Transcribe](/banner.png)
+![Youtube Transcribe](/public/readme_banner.png)
 
 # Youtube Transcribe
 
-A simple tool to transcribe youtube videos, powered by [DeepSeek](https://deepseek.ai/), [OpenAI](https://openai.com/), [DeepL](https://www.deepl.com/), and [Google Youtube API](https://developers.google.com/youtube/v3/getting-started).
+A simple tool to transcribe youtube videos, powered by [DeepSeek](https://deepseek.ai/), [OpenAI](https://openai.com/), [DeepL](https://www.deepl.com/),[Google Youtube API](https://developers.google.com/youtube/v3/getting-started), and [RapidAPI](https://rapidapi.com).
 
 ## Getting Started
 
@@ -29,6 +29,7 @@ A simple tool to transcribe youtube videos, powered by [DeepSeek](https://deepse
 - [DeepSeek](https://deepseek.ai/)
 - [DeepL](https://www.deepl.com/)
 - [Google Youtube API](https://developers.google.com/youtube/v3/getting-started)
+- [RapidAPI](https://rapidapi.com/)
 
 ## Contributing
 
