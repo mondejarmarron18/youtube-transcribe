@@ -13,7 +13,11 @@ export const metadata: Metadata = {
   title: "YouTube Transcribe",
   description: "A simple YouTube video transcriber",
   openGraph: {
-    images: "/public/og.jpg",
+    images: [
+      {
+        url: "/og.jpg",
+      },
+    ],
   },
 };
 
