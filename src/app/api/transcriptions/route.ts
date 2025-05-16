@@ -2,7 +2,7 @@ import ai from "@/utils/ai";
 import { isFreeTier } from "@/utils/tierValidator";
 import apiLimiter from "@/middlwares/apiLimiter";
 import { isoDurationToMs, timeToMs } from "@/utils/time";
-import { getYoutubeVideosInfo } from "@/utils/youtube";
+import { getYoutubeId, getYoutubeVideosInfo } from "@/utils/youtube";
 import youtubeToMp3, { YoutubeToMp3Return } from "@/utils/youtubeToMp3";
 import axios, { AxiosError } from "axios";
 import { toFile } from "openai";
@@ -15,10 +15,10 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { youtubeUrl } = body.data;
-    const youtubeId = youtubeUrl.split("v=")[1];
+    const youtubeId = getYoutubeId(youtubeUrl);
 
     if (!youtubeId) {
-      throw new Error("Failed to get youtube info");
+      throw new Error("Invalid youtube URL");
     }
 
     if (!GOOGLE_API_KEY) {
