@@ -9,15 +9,29 @@ const poppins = Poppins({
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
 });
 
-export const metadata: Metadata = {
+const metadataDetails = {
   title: "YouTube Transcribe",
   description: "A simple YouTube video transcriber",
+  image: "/og.jpg",
+};
+
+export const metadata: Metadata = {
+  title: metadataDetails.title,
+  description: metadataDetails.description,
   openGraph: {
+    title: metadataDetails.title,
+    description: metadataDetails.description,
     images: [
       {
-        url: "/og.jpg",
+        url: metadataDetails.image,
       },
     ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: metadataDetails.title,
+    description: metadataDetails.description,
+    images: [metadataDetails.image],
   },
 };
 
