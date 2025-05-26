@@ -75,13 +75,32 @@ export async function POST(request: Request) {
         file,
       });
 
-      const formattedTranscript = await ai.openai.chat.completions.create({
-        model: "o4-mini",
+      // const formattedTranscript = await ai.deepseek.chat.completions.create({
+      //   model: "deepseek-chat",
+      //   messages: [
+      //     {
+      //       role: "system",
+      //       content:
+      //         "Rewrite the following transcript to reflect a natural conversational tone. Add appropriate punctuation, pauses, and emotion to make it feel like how a person would speak aloud. Add paragraph breaks and emphasis where needed to make the speech flow naturally.",
+      //     },
+      //     {
+      //       role: "user",
+      //       content: transcript.text,
+      //     },
+      //   ],
+      // });
+
+      const formattedTranscript = await ai.deepseek.chat.completions.create({
+        model: "deepseek-chat",
         messages: [
           {
             role: "system",
-            content:
-              "Rewrite the following transcript to reflect a natural conversational tone. Add appropriate punctuation, pauses, and emotion to make it feel like how a person would speak aloud. Add paragraph breaks and emphasis where needed to make the speech flow naturally.",
+            content: `
+              Rewrite the following transcript to sound like naturally spoken language. 
+              Add punctuation, pauses, and paragraph breaks to improve readability and flow.
+              Do not change, add, or remove content—only format it to match how a person might say it aloud.
+              Return only the revised text. Do not include explanations, headings, or any additional output.
+            `,
           },
           {
             role: "user",
