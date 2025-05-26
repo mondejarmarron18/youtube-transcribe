@@ -21,17 +21,15 @@ export const metadata: Metadata = {
   openGraph: {
     title: metadataDetails.title,
     description: metadataDetails.description,
-    images: [
-      {
-        url: metadataDetails.image,
-      },
-    ],
+    images: [metadataDetails.image],
+    siteName: metadataDetails.title,
   },
   twitter: {
     card: "summary_large_image",
     title: metadataDetails.title,
     description: metadataDetails.description,
     images: [metadataDetails.image],
+    site: "@youtubetranscribe",
   },
 };
 
